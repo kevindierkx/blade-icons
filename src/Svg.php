@@ -12,18 +12,31 @@ final class Svg implements Htmlable
 {
     use RendersAttributes;
 
+    private string $set;
+
     private string $name;
 
     private string $contents;
 
-    public function __construct(string $name, string $contents, array $attributes = [])
+    public function __construct(string $set, string $name, string $contents, array $attributes = [])
     {
+        $this->set = $set;
         $this->name = $name;
-        $this->contents = $this->deferContent($contents, $attributes['defer'] ?? false);
+        $this->contents = $this->deferContent(
+            $contents,
+            $attributes['defer'] ?? false,
+            $attributes['defer-external'] ?? false
+        );
 
         unset($attributes['defer']);
+        unset($attributes['defer-external']);
 
         $this->attributes = $attributes;
+    }
+
+    public function set(): string
+    {
+        return $this->set;
     }
 
     public function name(): string
@@ -39,7 +52,9 @@ final class Svg implements Htmlable
     /**
      * This method adds a title element and an aria-labelledby attribute to the SVG.
      * To comply with accessibility standards, SVGs should have a title element.
-     * Check accessibility patterns for icons: https://www.deque.com/blog/creating-accessible-svgs/
+     * Check accessibility patterns for icons: https://www.deque.com/blog/creating-accessible-svgs/.
+     *
+     * @param string $title
      */
     public function addTitle(string $title): string
     {
@@ -67,12 +82,19 @@ final class Svg implements Htmlable
         );
     }
 
-    protected function deferContent(string $contents, $defer = false): string
+    protected function deferContent(string $contents, $defer = false, $deferExternal = false): string
     {
         if ($defer === false) {
             return $contents;
         }
 
+        return $deferExternal === false
+            ? $this->deferInline($contents, $defer)
+            : $this->deferExternal($contents);
+    }
+
+    protected function deferInline(string $contents, $defer): string
+    {
         $svgContent = Str::of($contents)
             ->replaceMatches('/<svg[^>]*>/', '')
             ->replaceMatches('/<\/svg>/', '')
@@ -93,6 +115,18 @@ final class Svg implements Htmlable
                     @endpush
                 @endonce
             BLADE;
+
+        return $contents;
+    }
+
+    protected function deferExternal(string $contents): string
+    {
+        $svgContent = Str::of($contents)
+            ->replaceMatches('/<svg[^>]*>/', '')
+            ->replaceMatches('/<\/svg>/', '')
+            ->__toString();
+
+        $contents = str_replace($svgContent, strtr('<use href=":href"></use>', [':href' => route('blade-icons.icon', [$this->set, $this->name])]), $contents).PHP_EOL;
 
         return $contents;
     }

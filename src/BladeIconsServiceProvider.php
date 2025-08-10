@@ -10,6 +10,7 @@ use Illuminate\Contracts\View\Factory as ViewFactory;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
 final class BladeIconsServiceProvider extends ServiceProvider
@@ -27,6 +28,8 @@ final class BladeIconsServiceProvider extends ServiceProvider
         $this->bootDirectives();
         $this->bootIconComponent();
         $this->bootPublishing();
+
+        $this->configureRoutes();
     }
 
     private function registerConfig(): void
@@ -40,7 +43,7 @@ final class BladeIconsServiceProvider extends ServiceProvider
             $config = $app->make('config')->get('blade-icons', []);
 
             $factory = new Factory(
-                new Filesystem,
+                new Filesystem(),
                 $app->make(IconsManifest::class),
                 $app->make(FilesystemFactory::class),
                 $config,
@@ -71,7 +74,7 @@ final class BladeIconsServiceProvider extends ServiceProvider
     {
         $this->app->singleton(IconsManifest::class, function (Application $app) {
             return new IconsManifest(
-                new Filesystem,
+                new Filesystem(),
                 $this->manifestPath(),
                 $app->make(FilesystemFactory::class),
             );
@@ -119,6 +122,17 @@ final class BladeIconsServiceProvider extends ServiceProvider
             $this->publishes([
                 __DIR__.'/../config/blade-icons.php' => $this->app->configPath('blade-icons.php'),
             ], 'blade-icons');
+        }
+    }
+
+    protected function configureRoutes()
+    {
+        if (true) {
+            Route::group([
+                'namespace' => 'BladeUI\Icons\Http\Controllers',
+            ], function () {
+                $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
+            });
         }
     }
 }

@@ -31,7 +31,7 @@ final class Factory
         Filesystem $filesystem,
         IconsManifest $manifest,
         ?FilesystemFactory $disks = null,
-        array $config = []
+        array $config = [],
     ) {
         $this->filesystem = $filesystem;
         $this->manifest = $manifest;
@@ -48,7 +48,7 @@ final class Factory
     }
 
     /**
-     * @internal This method is only meant for internal purposes and does not fall under the package's BC promise.
+     * @internal this method is only meant for internal purposes and does not fall under the package's BC promise
      */
     public function all(): array
     {
@@ -56,6 +56,9 @@ final class Factory
     }
 
     /**
+     * @param string $set
+     * @param array  $options
+     *
      * @throws CannotRegisterIconSet
      */
     public function add(string $set, array $options): self
@@ -116,6 +119,10 @@ final class Factory
     }
 
     /**
+     * @param string $name
+     * @param mixed  $class
+     * @param array  $attributes
+     *
      * @throws SvgNotFound
      */
     public function svg(string $name, $class = '', array $attributes = []): Svg
@@ -124,6 +131,7 @@ final class Factory
 
         try {
             return new Svg(
+                $set,
                 $name,
                 $this->contents($set, $name),
                 $this->formatAttributes($set, $class, $attributes),
@@ -134,12 +142,12 @@ final class Factory
 
                 try {
                     return new Svg(
+                        $set,
                         $name,
                         $this->contents($set, $name),
                         $this->formatAttributes($set, $class, $attributes),
                     );
                 } catch (SvgNotFound $exception) {
-                    //
                 }
             }
 
@@ -152,6 +160,9 @@ final class Factory
     }
 
     /**
+     * @param string $set
+     * @param string $name
+     *
      * @throws SvgNotFound
      */
     private function contents(string $set, string $name): string
@@ -169,7 +180,6 @@ final class Factory
                         $this->sets[$set]['disk'] ?? null,
                     );
                 } catch (FileNotFoundException $exception) {
-                    //
                 }
             }
         }
@@ -248,6 +258,8 @@ final class Factory
     }
 
     /**
+     * @param ?string $disk
+     *
      * @return \Illuminate\Contracts\Filesystem\Filesystem|Filesystem
      */
     private function filesystem(?string $disk = null)
